@@ -62,7 +62,7 @@ class BrowserifyRb
                 input_buff = d[bytes .. -1]
               else
                 bytes = stdin.write_nonblock(input_buff)
-                input_buff = d[bytes .. -1]
+                input_buff = input_buff[bytes .. -1]
               end
             end
           end
