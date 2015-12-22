@@ -14,9 +14,33 @@ class BrowserifyRb
     @env = env
     @browserify_opts = browserify_opts
     @suppress_stderr = suppress_stderr
+    @prepared = false
+  end
+
+  def prepare
+    cmd = <<-CMD
+      if ! npm ls -g browserify &>/dev/null; then
+        npm install -g browserify >&2
+      fi
+    CMD
+    stdout_handler = proc {|d| }
+    stderr_handler = @suppress_stderr ?
+                       proc {|d| } :
+                       proc {|d| STDERR.print d}
+    status = @nvm.run(
+      cmd,
+      node_ver: @node_ver,
+      env: @env,
+      stdout_handler: stdout_handler,
+      stderr_handler: stderr_handler
+    ).value
+    raise "non-zero exit status: #{status.to_i}" unless status.success?
+    @prepared = true
   end
 
   def compile source
+    prepare unless @prepared
+
     out_buf = StringIO.new
     cmd = <<-CMD
       if ! npm ls -g browserify &>/dev/null; then
