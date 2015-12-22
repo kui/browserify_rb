@@ -7,8 +7,8 @@ class BrowserifyRb
     LOG = Logger.new(STDERR)
 
     CHUNK_SIZE = 2000
-    DEFAULT_STDOUT_HANDLER = proc {|data| STDOUT.print data }
-    DEFAULT_STDERR_HANDLER = proc {|data| STDERR.print data }
+    DEFAULT_STDOUT_HANDLER = proc {|data| STDOUT.write data }
+    DEFAULT_STDERR_HANDLER = proc {|data| STDERR.write data }
 
     def self.async_exec(
           input: "",
@@ -27,6 +27,10 @@ class BrowserifyRb
         in_buf = StringIO.new input
         opened_ins = [stdin]
         opened_outs = [stdout, stderr]
+        handlers = {
+          stdout => stdout_handler,
+          stderr => stderr_handler
+        }
         begin
           while not opened_outs.empty?
             ios = IO.select opened_outs, opened_ins, nil, 1
@@ -36,24 +40,14 @@ class BrowserifyRb
 
             outs, ins, = ios
 
-            unless outs.nil?
-              if outs.include? stdout
-                if stdout.eof?
-                  stdout.close
-                  opened_outs.delete stdout
+            if not outs.nil?
+              outs.each do |out|
+                if out.eof?
+                  out.close
+                  opened_outs.delete out
                 else
-                  d = stdout.readpartial CHUNK_SIZE
-                  stdout_handler.yield d
-                end
-              end
-
-              if outs.include? stderr
-                if stderr.eof?
-                  stderr.close
-                  opened_outs.delete stderr
-                else
-                  d = stderr.readpartial CHUNK_SIZE
-                  stderr_handler.yield d
+                  d = out.readpartial CHUNK_SIZE
+                  handlers[out].call d
                 end
               end
             end
