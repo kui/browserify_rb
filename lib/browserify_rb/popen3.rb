@@ -11,27 +11,27 @@ class BrowserifyRb
     DEFAULT_STDERR_HANDLER = proc {|data| STDERR.write data }
 
     def self.async_exec(
+          cmd,
           input: "",
           env: {},
-          cmd: nil,
           stdout_handler: DEFAULT_STDOUT_HANDLER,
           stderr_handler: DEFAULT_STDERR_HANDLER,
           spawn_opts: {},
           chunk_size: CHUNK_SIZE)
-
-      raise ArgumentError, "'cmd' require" if cmd.nil?
-
-      stdin, stdout, stderr, wait_thr = Open3.popen3 env, cmd, spawn_opts
-
       Thread.fork do
-        in_buf = StringIO.new input
-        opened_ins = [stdin]
-        opened_outs = [stdout, stderr]
-        handlers = {
-          stdout => stdout_handler,
-          stderr => stderr_handler
-        }
         begin
+          stdin, stdout, stderr, wait_thr = Open3.popen3 env, cmd, spawn_opts
+
+          input = input.is_a?(String) ?
+                     StringIO.new(input) :
+                     iput
+          input_buff = ""
+          opened_ins = [stdin]
+          opened_outs = [stdout, stderr]
+          handlers = {
+            stdout => stdout_handler,
+            stderr => stderr_handler
+          }
           while not opened_outs.empty?
             ios = IO.select opened_outs, opened_ins, nil, 1
             if ios.nil? and Process.waitpid(wait_thr.pid, Process::WNOHANG)
@@ -46,29 +46,33 @@ class BrowserifyRb
                   out.close
                   opened_outs.delete out
                 else
-                  d = out.readpartial CHUNK_SIZE
+                  d = out.readpartial chunk_size
                   handlers[out].call d
                 end
               end
             end
 
             if not ins.nil? and ins.include? stdin
-              if in_buf.eof?
+              if input.eof?
                 stdin.close
                 opened_ins.delete stdin
-              else
-                d = in_buf.readpartial(CHUNK_SIZE)
+              elsif input_buff.empty?
+                d = input.readpartial(chunk_size)
                 bytes = stdin.write_nonblock(d)
-                in_buf.seek(bytes - d.bytesize, IO::SEEK_CUR)
+                input_buff = d[bytes .. -1]
+              else
+                bytes = stdin.write_nonblock(input_buff)
+                input_buff = d[bytes .. -1]
               end
             end
           end
+
+          wait_thr.value
         rescue => e
           LOG.error e
+          nil
         end
       end
-
-      wait_thr
     end
   end
 end

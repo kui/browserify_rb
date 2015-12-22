@@ -34,7 +34,8 @@ class BrowserifyRb
       CMD
 
       BrowserifyRb::Popen3.async_exec(
-        input: stdin, env: new_env, cmd: cmd,
+        cmd,
+        input: stdin, env: new_env,
         stdout_handler: stdout_handler,
         stderr_handler: stderr_handler
       )
@@ -52,7 +53,7 @@ class BrowserifyRb
       CMD
 
       st = BrowserifyRb::Popen3.async_exec(
-        cmd: cmd,
+        cmd,
         stdout_handler: proc {|d| out << d },
         stderr_handler: proc {|d| err << d }
       ).value
