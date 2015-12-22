@@ -23,11 +23,10 @@ class BrowserifyRb
 
       stdin, stdout, stderr, wait_thr = Open3.popen3 env, cmd, spawn_opts
 
-      in_buf = StringIO.new input
-      opened_ins = [stdin]
-      opened_outs = [stdout, stderr]
-
       Thread.fork do
+        in_buf = StringIO.new input
+        opened_ins = [stdin]
+        opened_outs = [stdout, stderr]
         begin
           while not opened_outs.empty?
             ios = IO.select opened_outs, opened_ins, nil, 1
@@ -39,36 +38,34 @@ class BrowserifyRb
 
             unless outs.nil?
               if outs.include? stdout
-                begin
+                if stdout.eof?
+                  stdout.close
+                  opened_outs.delete stdout
+                else
                   d = stdout.readpartial CHUNK_SIZE
                   stdout_handler.yield d
-                rescue EOFError
-                  opened_outs.delete stdout
                 end
               end
 
               if outs.include? stderr
-                begin
+                if stderr.eof?
+                  stderr.close
+                  opened_outs.delete stderr
+                else
                   d = stderr.readpartial CHUNK_SIZE
                   stderr_handler.yield d
-                rescue EOFError
-                  opened_outs.delete stderr
                 end
               end
             end
 
             if not ins.nil? and ins.include? stdin
-              i = begin
-                    in_buf.readpartial CHUNK_SIZE
-                  rescue EOFError
-                    nil
-                  end
-              if i.nil?
+              if in_buf.eof?
                 stdin.close
                 opened_ins.delete stdin
               else
-                bytes = stdin.write_nonblock(i)
-                in_buf.seek bytes - i.bytesize, IO::SEEK_CUR
+                d = in_buf.readpartial(CHUNK_SIZE)
+                bytes = stdin.write_nonblock(d)
+                in_buf.seek(bytes - d.bytesize, IO::SEEK_CUR)
               end
             end
           end
