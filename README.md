@@ -24,7 +24,9 @@ Or install it yourself as:
 require "browserify_rb"
 
 br = BrowserifyRb.new
-puts br.compile("require("stream");console.log('foo');")
+puts br.compile("console.log('foo');")
+
+puts BrowserifyRb.compile("console.log('bar');")
 ```
 
 `node` nor `nvm` are not required.
