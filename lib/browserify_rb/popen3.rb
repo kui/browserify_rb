@@ -5,6 +5,7 @@ require "logger"
 class BrowserifyRb
   module Popen3
     LOG = Logger.new(STDERR)
+    LOG.level = Logger::Severity.const_get(ENV["LOG"] || "INFO")
 
     CHUNK_SIZE = 2000
     DEFAULT_STDOUT_HANDLER = proc {|data| STDOUT.write data }

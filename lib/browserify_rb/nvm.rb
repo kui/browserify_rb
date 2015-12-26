@@ -1,8 +1,13 @@
 require "browserify_rb/popen3"
+
 require "stringio"
+require "logger"
 
 class BrowserifyRb
   class Nvm
+    LOG = Logger.new(STDERR)
+    LOG.level = Logger::Severity.const_get(ENV["LOG"] || "INFO")
+
     NVM_SH = File.join(__dir__, "nvm.sh")
 
     def initialize nvm_dir = "#{ENV["HOME"]}/.nvm"
@@ -22,8 +27,8 @@ class BrowserifyRb
           env: {})
       new_env = (env).merge(self.env)
       cmd = <<-CMD
-        source "#{NVM_SH}" || {
-          printf "Abort\n" >&2
+        . "#{NVM_SH}" || {
+          printf "Abort\\n" >&2
           exit 1
         }
         if ! nvm use "#{node_ver}" >&2; then
@@ -33,6 +38,7 @@ class BrowserifyRb
         #{cmd}
       CMD
 
+      LOG.debug "run: #{cmd}"
       BrowserifyRb::Popen3.async_exec(
         cmd,
         input: stdin, env: new_env,
@@ -45,13 +51,14 @@ class BrowserifyRb
       out = StringIO.new
       err = StringIO.new
       cmd = <<-CMD
-        source "#{NVM_SH}" || {
-          printf "Abort\n" >&2
+        . "#{NVM_SH}" || {
+          printf "Abort\\n" >&2
           exit 1
         }
         nvm --version
       CMD
 
+      LOG.debug "run: #{cmd}"
       st = BrowserifyRb::Popen3.async_exec(
         cmd,
         stdout_handler: proc {|d| out << d },

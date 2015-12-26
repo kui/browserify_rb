@@ -2,31 +2,34 @@ require "browserify_rb/version"
 require "browserify_rb/nvm"
 
 require "stringio"
+require "logger"
 
 class BrowserifyRb
   DEFAULT_NVM_DIR = "#{ENV["HOME"]}/.nvm"
+  LOG = Logger.new(STDERR)
+  LOG.level = Logger::Severity.const_get(ENV["LOG"] || "INFO")
 
   def initialize(
         browserify_opts: "", node_ver: "stable", env: {},
-        nvm_dir: DEFAULT_NVM_DIR, suppress_stderr: false)
+        nvm_dir: DEFAULT_NVM_DIR, suppress_stderr: false,
+        required_modules: nil)
     @nvm = BrowserifyRb::Nvm.new nvm_dir
     @node_ver = node_ver
     @env = env
     @browserify_opts = browserify_opts
     @suppress_stderr = suppress_stderr
     @prepared = false
+    @modules = required_modules
   end
 
   def prepare
-    cmd = <<-CMD
-      if ! npm ls -g browserify &>/dev/null; then
-        npm install -g browserify >&2
-      fi
-    CMD
+    ms = ["browserify", *@modules].map{|m| %Q!"#{m}"! }.join(" ")
+    cmd = "npm install #{ms}"
     stdout_handler = proc {|d| }
     stderr_handler = @suppress_stderr ?
                        proc {|d| } :
                        proc {|d| STDERR.print d}
+    LOG.debug "run: #{cmd}"
     status = @nvm.run(
       cmd,
       node_ver: @node_ver,
@@ -43,10 +46,7 @@ class BrowserifyRb
 
     out_buf = StringIO.new
     cmd = <<-CMD
-      if ! npm ls -g browserify &>/dev/null; then
-        npm install -g browserify >&2
-      fi
-      browserify #{@browserify_opts} -- -
+      node_modules/.bin/browserify #{@browserify_opts} -- -
     CMD
     stdout_handler = proc {|d| out_buf << d }
     stderr_handler = @suppress_stderr ?
