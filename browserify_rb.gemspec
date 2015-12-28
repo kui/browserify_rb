@@ -9,8 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Keiichiro Ui"]
   spec.email         = ["keiichiro.ui@gmail.com"]
 
-  spec.summary       = %q{browserify wrapper}
-  spec.description   = %q{browserify wrapper with nvm to install node automatically}
+  spec.summary       = %q{browserify wrapper for ruby}
   spec.homepage      = "https://github.com/kui/browserify_rb"
   spec.license       = "MIT"
 

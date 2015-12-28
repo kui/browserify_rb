@@ -1,6 +1,6 @@
 # BrowserifyRb
 
-browserify wrapper with nvm to install node automatically.
+browserify wrapper for ruby.
 
 ## Installation
 
@@ -18,18 +18,45 @@ Or install it yourself as:
 
     $ gem install browserify_rb
 
+
 ## Usage
+
+BrewserifyRb has 2 implementations: `BrowserifyRb::Browserify`, `BrowserifyRb::Nvm::Browserify`
+
+
+### BrowserifyRb::Browserify
+
+`browserify` required:
 
 ```ruby
 require "browserify_rb"
 
-br = BrowserifyRb.new
+# if you install browserify in global
+br = BrowserifyRb::Browserify.new
 puts br.compile("console.log('foo');")
+# or
+puts BrowserifyRb::Browserify.compile("console.log('bar');")
 
-puts BrowserifyRb.compile("console.log('bar');")
+# if you install browserify in ./node_modules
+br = BrowserifyRb::Browserify.new(command: "$(npm bin)/browserify -")
+puts br.compile("console.log('foo');")
+# or
+puts BrowserifyRb::Browserify.compile("console.log('bar');", command: "$(npm bin)/browserify -")
 ```
 
-`node` nor `nvm` are not required.
+
+### BrowserifyRb::Nvm::Browserify
+
+`browserify`, `node` nor `nvm` are not required. These are installed automatically:
+
+```ruby
+require "browserify_rb"
+
+br = BrowserifyRb::Nvm::Browserify.new
+puts br.compile("console.log('foo');")
+# or
+puts BrowserifyRb::Nvm::Browserify.compile("console.log('bar');")
+```
 
 ## Development
 
