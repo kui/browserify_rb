@@ -7,6 +7,7 @@ class BrowserifyRb
   class Nvm
     LOG = Logger.new(STDERR)
     LOG.level = Logger::Severity.const_get(ENV["LOG"] || "INFO")
+    LOG.progname = Nvm
 
     NVM_SH = File.join(__dir__, "nvm.sh")
 

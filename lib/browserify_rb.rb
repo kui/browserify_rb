@@ -8,6 +8,7 @@ class BrowserifyRb
   DEFAULT_NVM_DIR = "#{ENV["HOME"]}/.nvm"
   LOG = Logger.new(STDERR)
   LOG.level = Logger::Severity.const_get(ENV["LOG"] || "INFO")
+  LOG.progname = BrowserifyRb
 
   def initialize(
         browserify_opts: "", node_ver: "stable", env: {},
