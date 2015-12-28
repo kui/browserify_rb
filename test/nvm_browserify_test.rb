@@ -9,16 +9,10 @@ class BrowserifyRb::Nvm::BrowserifyTest < Minitest::Test
     node_ver: "stable"
   ).prepare
 
-  Minitest.after_run do
-    FileUtils.rm_rf NVM_DIR
-    FileUtils.rm_rf "node_modules"
-  end
-
   def test_it_run_browserify
     code = "console.log('foooooo')"
     result = BrowserifyRb::Nvm::Browserify.compile code, nvm_dir: NVM_DIR, node_ver: "stable"
-    matcher = Regexp.new(Regexp.quote(code))
-    assert_match matcher, result
+    assert_match code, result
   end
 
   def test_it_run_browserify_with_babelify

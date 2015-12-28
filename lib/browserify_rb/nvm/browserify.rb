@@ -25,9 +25,9 @@ class BrowserifyRb::Nvm::Browserify
   def prepare
     ms = ["browserify", *@modules].map{|m| %!"#{m}"! }.join(" ")
     cmd = "npm install #{ms}"
-    stdout_handler = proc {|d| }
+    stdout_handler = proc { }
     stderr_handler = @suppress_stderr ?
-                       proc {|d| } :
+                       proc { } :
                        proc {|d| STDERR.print d}
     LOG.debug "run: #{cmd}"
     status = @nvm.run(
