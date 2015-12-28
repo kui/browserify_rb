@@ -11,7 +11,7 @@ class BrowserifyRb
   LOG.progname = BrowserifyRb
 
   def initialize(
-        browserify_opts: "", node_ver: "stable", env: {},
+        browserify_opts: "", node_ver: nil, env: {},
         nvm_dir: DEFAULT_NVM_DIR, suppress_stderr: false,
         required_modules: nil)
     @nvm = BrowserifyRb::Nvm.new nvm_dir
@@ -24,7 +24,7 @@ class BrowserifyRb
   end
 
   def prepare
-    ms = ["browserify", *@modules].map{|m| %Q!"#{m}"! }.join(" ")
+    ms = ["browserify", *@modules].map{|m| %!"#{m}"! }.join(" ")
     cmd = "npm install #{ms}"
     stdout_handler = proc {|d| }
     stderr_handler = @suppress_stderr ?
@@ -47,7 +47,7 @@ class BrowserifyRb
 
     out_buf = StringIO.new
     cmd = <<-CMD
-      node_modules/.bin/browserify #{@browserify_opts} -- -
+      $(npm bin)/browserify #{@browserify_opts} -- -
     CMD
     stdout_handler = proc {|d| out_buf << d }
     stderr_handler = @suppress_stderr ?
@@ -67,7 +67,7 @@ class BrowserifyRb
   end
 
   def self.compile(
-        source, browserify_opts: "", node_ver: "stable", env: {},
+        source, browserify_opts: "", node_ver: nil, env: {},
         nvm_dir: DEFAULT_NVM_DIR, suppress_stderr: false)
     new(
       browserify_opts: browserify_opts,

@@ -24,17 +24,15 @@ class BrowserifyRb
           stdin: "",
           stdout_handler: proc{|d| STDOUT.print d },
           stderr_handler: proc{|d| STDERR.print d },
-          node_ver: "stable",
+          node_ver: nil,
           env: {})
       new_env = (env).merge(self.env)
+      node_ver = node_ver ? %["#{node_ver}"] : ""
       cmd = <<-CMD
-        . "#{NVM_SH}" || {
-          printf "Abort\\n" >&2
-          exit 1
-        }
-        if ! nvm use "#{node_ver}" >&2; then
-          nvm install "#{node_ver}" >&2
-          nvm use "#{node_ver}" >&2
+        . "#{NVM_SH}"
+        if ! nvm use #{node_ver} >&2; then
+          nvm install #{node_ver} >&2
+          nvm use #{node_ver} >&2
         fi
         #{cmd}
       CMD
@@ -52,10 +50,7 @@ class BrowserifyRb
       out = StringIO.new
       err = StringIO.new
       cmd = <<-CMD
-        . "#{NVM_SH}" || {
-          printf "Abort\\n" >&2
-          exit 1
-        }
+        . "#{NVM_SH}"
         nvm --version
       CMD
 
